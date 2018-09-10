@@ -4,6 +4,10 @@ const channel = new events.EventEmitter();
 
 channel.clients = {};
 channel.subscriptions = {};
+channel.on('leave', function(id) {
+  channel.removeListener('broadcast', this.subscriptions[id]);
+  channel.emit('broadcast', id, `${id} has left the chatroom.\n`);
+});
 channel.on('join', function(id, client) {
   this.clients[id] = client;
   this.subscriptions[id] = (senderId, message) => {
@@ -22,10 +26,14 @@ const server = net.createServer( client => {
     if(client.username === undefined){
       client.username = data.toString().replace(/(\r\n|\n|\r)/gm,"");
       channel.emit('join', id, client);
+      channel.emit('broadcast', id, `${client.username} has join the chatroom.\n`)
     }else{
       data = client.username + ": " + data.toString();
       channel.emit('broadcast', id, data);
     }
+  });
+  client.on('close', () => {
+    channel.emit('leave', id);
   });
 });
 
