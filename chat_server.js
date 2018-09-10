@@ -9,6 +9,7 @@ channel.on('leave', function(id) {
   channel.emit('broadcast', id, `${id} has left the chatroom.\n`);
 });
 channel.on('join', function(id, client) {
+  client.write(`Guests online: ${this.listeners('broadcast').length}\n`)
   this.clients[id] = client;
   this.subscriptions[id] = (senderId, message) => {
     if (id != senderId) {
